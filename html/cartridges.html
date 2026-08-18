@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Картриджи - Учет картриджей</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Сайдбар */
+        .sidebar {
+            width: 60px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+            z-index: 1000;
+        }
+
+        .sidebar:hover {
+            width: 250px;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 0 20px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;
+        }
+
+        .sidebar:hover h2 {
+            opacity: 1;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: #34495e;
+            border-left-color: #3498db;
+        }
+
+        .nav-item.active {
+            background: #34495e;
+            border-left-color: #3498db;
+        }
+
+        .nav-item a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-text {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar:hover .nav-text {
+            opacity: 1;
+        }
+
+        /* Основной контент */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Контейнер контента */
+        .content-container {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* Панель поиска */
+        .search-panel {
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .clear-search-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .clear-search-btn:hover {
+            background: #da190b;
+        }
+
+        /* Кнопки */
+        .buttons-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .add-cartridge-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-cartridge-btn:hover {
+            background: #1976D2;
+        }
+
+        .arrival-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .arrival-btn:hover {
+            background: #45a049;
+        }
+
+        .consumption-btn {
+            background: #FF9800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .consumption-btn:hover {
+            background: #F57C00;
+        }
+
+        /* Стили для таблицы */
+        .cartridges-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .cartridges-table th,
+        .cartridges-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .cartridges-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .cartridges-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        /* Кнопки действий */
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .sort-id-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sort-id-btn:hover {
+            background: #5a6268;
+        }
+
+        .sort-id-btn.active {
+            background: #343a40;
+        }
+
+        .sort-id-btn.asc .sort-icon {
+            transform: rotate(180deg);
+        }
+
+        .sort-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .edit-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .edit-btn:hover {
+            background: #1976D2;
+        }
+
+        .edit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-btn:hover {
+            background: #da190b;
+        }
+
+        .delete-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #2196F3;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+
+        /* Стили для поиска картриджей в модальных окнах */
+        .search-container {
+            position: relative;
+        }
+
+        .search-input-modal {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .search-result-item:hover {
+            background: #f5f5f5;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .cartridge-info {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .cartridge-available {
+            color: #4CAF50;
+        }
+
+        .cartridge-low {
+            color: #FF9800;
+        }
+
+        .cartridge-unavailable {
+            color: #f44336;
+        }
+
+        .submit-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .submit-btn:hover {
+            background: #45a049;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .modal-content {
+                margin: 5% auto;
+                padding: 15px;
+                width: 95%;
+            }
+
+            .buttons-container {
+                flex-direction: column;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .modal-content {
+                margin: 2% auto;
+                padding: 12px;
+            }
+
+            .modal-title {
+                font-size: 1.1rem;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 6px 8px;
+                font-size: 13px;
+            }
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            color: #666;
+            background: white;
+            border-top: 1px solid #ddd;
+        }
+
+        /* Индикатор для пользователя */
+        .sidebar::after {
+            content: '☰';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            color: white;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar:hover::after {
+            opacity: 0;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 60px;
+                padding: 0;
+            }
+
+            .sidebar:hover {
+                width: 100%;
+                height: auto;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .sidebar:hover .nav-menu {
+                display: block;
+            }
+
+            .sidebar h2 {
+                display: none;
+            }
+
+            .sidebar:hover h2 {
+                display: block;
+            }
+        }
+
+        /* Стили для редактирования в таблице */
+        .editable-cell {
+            position: relative;
+        }
+
+        .edit-input {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #2196F3;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .edit-actions {
+            margin-top: 5px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .save-edit-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .cancel-edit-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Сайдбар с навигацией -->
+    <div class="sidebar">
+        <h2>📊 Учет</h2>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="index.html">
+                    <span>🖨️</span>
+                    <span class="nav-text">Принтеры</span>
+                </a>
+            </li>
+            <li class="nav-item active">
+                <a href="cartridges.html">
+                    <span>🖋️</span>
+                    <span class="nav-text">Картриджи</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="reports.html">
+                    <span>📈</span>
+                    <span class="nav-text">Отчетность</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="main-content">
+        <!-- Контент с таблицей -->
+        <div class="content-container">
+            <h2>Все картриджи</h2>
+
+            <!-- Панель поиска -->
+            <div class="search-panel">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text"
+                           id="globalSearch"
+                           class="search-input"
+                           placeholder="Поиск по названию картриджа..."
+                           onkeyup="filterCartridges()">
+                    <button class="clear-search-btn" onclick="clearSearch()">
+                        Очистить
+                    </button>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+                    Найдено: <span id="searchCount">0</span> картриджей
+                </div>
+            </div>
+
+        <div class="buttons-container">
+            <button class="add-cartridge-btn" onclick="openAddModal()">
+                <span>➕</span> Добавить картридж
+            </button>
+            <button class="arrival-btn" onclick="openArrivalModal()">
+                <span>📦</span> Приход
+            </button>
+            <button class="consumption-btn" onclick="openConsumptionModal()">
+                <span>📤</span> Расход
+            </button>
+            <button class="sort-id-btn" onclick="sortByID()" id="sortIDBtn">
+                <span class="sort-icon">🔽</span> Упорядочить по ID
+            </button>
+        </div>
+
+            <div id="loading">Загрузка данных...</div>
+            <div id="cartridges-list"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления картриджа -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Добавить новый картридж</div>
+                <button class="close-btn" onclick="closeAddModal()">&times;</button>
+            </div>
+            <form id="addCartridgeForm">
+                <div class="form-group">
+                    <label for="name">Название картриджа:</label>
+                    <input type="text" id="name" name="name" required placeholder="Например: HP 83X Black">
+                </div>
+                <div class="form-group">
+                    <label for="stock_quantity">Количество на складе:</label>
+                    <input type="number" id="stock_quantity" name="stock_quantity" value="0" min="0" required>
+                </div>
+
+                <button type="submit" class="submit-btn">Добавить картридж</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно прихода картриджей -->
+    <div id="arrivalModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Приход картриджей</div>
+                <button class="close-btn" onclick="closeArrivalModal()">&times;</button>
+            </div>
+            <form id="arrivalForm">
+                <div class="form-group">
+                    <label for="arrival_cartridge_search">Поиск картриджа:</label>
+                    <div class="search-container">
+                        <input type="text" id="arrival_cartridge_search" class="search-input-modal" placeholder="Начните вводить название картриджа...">
+                        <div id="arrival_cartridge_results" class="search-results"></div>
+                        <input type="hidden" id="arrival_cartridge_id" name="cartridge_id" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="arrival_quantity">Количество для прихода:</label>
+                    <input type="number" id="arrival_quantity" name="arrival_quantity" value="1" min="1" required>
+                </div>
+
+                <button type="submit" class="submit-btn">Добавить приход</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно расхода картриджей -->
+    <div id="consumptionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Расход картриджей</div>
+                <button class="close-btn" onclick="closeConsumptionModal()">&times;</button>
+            </div>
+            <form id="consumptionForm">
+                <div class="form-group">
+                    <label for="consumption_cartridge_search">Поиск картриджа:</label>
+                    <div class="search-container">
+                        <input type="text" id="consumption_cartridge_search" class="search-input-modal" placeholder="Начните вводить название картриджа...">
+                        <div id="consumption_cartridge_results" class="search-results"></div>
+                        <input type="hidden" id="consumption_cartridge_id" name="cartridge_id" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="consumption_quantity">Количество для расхода:</label>
+                    <input type="number" id="consumption_quantity" name="consumption_quantity" value="1" min="1" required>
+                </div>
+
+                <button type="submit" class="submit-btn">Добавить расход</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования картриджа -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Редактировать картридж</div>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="editCartridgeForm">
+                <input type="hidden" id="edit_cartridge_id" name="id">
+                <div class="form-group">
+                    <label for="edit_name">Название картриджа:</label>
+                    <input type="text" id="edit_name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_stock_quantity">Количество на складе:</label>
+                    <input type="number" id="edit_stock_quantity" name="stock_quantity" min="0" required>
+                </div>
+
+                <button type="submit" class="submit-btn">Сохранить изменения</button>
+            </form>
+        </div>
+    </div>
+
+        <script>
+        let cartridges = [];
+        let filteredCartridges = [];
+        let editingCartridgeId = null;
+        let sortAscending = true;
+        let isSortedByID = false;
+
+        // Функции для модальных окон
+        function openAddModal() {
+            document.getElementById('addModal').style.display = 'block';
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+            document.getElementById('addCartridgeForm').reset();
+        }
+
+        function openArrivalModal() {
+            document.getElementById('arrivalModal').style.display = 'block';
+            // Сбрасываем поиск
+            document.getElementById('arrival_cartridge_search').value = '';
+            document.getElementById('arrival_cartridge_id').value = '';
+            document.getElementById('arrival_cartridge_results').style.display = 'none';
+            document.getElementById('arrival_quantity').value = '1';
+        }
+
+        function closeArrivalModal() {
+            document.getElementById('arrivalModal').style.display = 'none';
+            document.getElementById('arrivalForm').reset();
+        }
+
+        function openConsumptionModal() {
+            document.getElementById('consumptionModal').style.display = 'block';
+            // Сбрасываем поиск
+            document.getElementById('consumption_cartridge_search').value = '';
+            document.getElementById('consumption_cartridge_id').value = '';
+            document.getElementById('consumption_cartridge_results').style.display = 'none';
+            document.getElementById('consumption_quantity').value = '1';
+        }
+
+        function closeConsumptionModal() {
+            document.getElementById('consumptionModal').style.display = 'none';
+            document.getElementById('consumptionForm').reset();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('editCartridgeForm').reset();
+        }
+
+        // Функция для загрузки данных картриджей
+        async function loadCartridges() {
+            try {
+                const response = await fetch('http://10.174.130.148:8888/api/cartridges');
+                const data = await response.json();
+                cartridges = data;
+                filteredCartridges = [...data];
+                displayCartridges(data);
+                updateSearchCount(data.length);
+            } catch (error) {
+                document.getElementById('cartridges-list').innerHTML =
+                    '<p style="color: red;">Ошибка загрузки данных: ' + error.message + '</p>';
+            }
+        }
+
+        // Функция для фильтрации картриджей
+        function filterCartridges() {
+            const searchTerm = document.getElementById('globalSearch').value.toLowerCase();
+
+            if (searchTerm.trim() === '') {
+                filteredCartridges = [...cartridges];
+            } else {
+                filteredCartridges = cartridges.filter(cartridge =>
+                    cartridge.name.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            displayCartridges(filteredCartridges);
+            updateSearchCount(filteredCartridges.length);
+        }
+
+        // Функция для очистки поиска
+        function clearSearch() {
+            document.getElementById('globalSearch').value = '';
+            filterCartridges();
+        }
+
+        // Функция для обновления счетчика поиска
+        function updateSearchCount(count) {
+            document.getElementById('searchCount').textContent = count;
+        }
+
+        // Функция для поиска картриджей в модальных окнах
+        function searchCartridges(searchTerm, resultsContainer, hiddenInput, type = 'arrival') {
+            resultsContainer.innerHTML = '';
+
+            if (searchTerm.length < 2) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+
+            const filtered = cartridges.filter(cartridge =>
+                cartridge.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = '<div class="search-result-item">Ничего не найдено</div>';
+            } else {
+                filtered.forEach(cartridge => {
+                    const available = cartridge.stock_quantity - cartridge.used_quantity;
+                    let availabilityClass = 'cartridge-available';
+                    let availabilityText = `Доступно: ${available} из ${cartridge.stock_quantity}`;
+
+                    if (available <= 0) {
+                        availabilityClass = 'cartridge-unavailable';
+                    } else if (available < 5) {
+                        availabilityClass = 'cartridge-low';
+                    }
+
+                    const item = document.createElement('div');
+                    item.className = 'search-result-item';
+                    item.innerHTML = `
+                        <div>${cartridge.name}</div>
+                        <div class="cartridge-info ${availabilityClass}">
+                            ${availabilityText}
+                        </div>
+                    `;
+                    item.dataset.id = cartridge.id;
+                    item.dataset.available = available;
+
+                    // Для расхода проверяем доступность
+                    if (type === 'consumption' && available <= 0) {
+                        item.style.opacity = '0.6';
+                        item.style.cursor = 'not-allowed';
+                        item.title = 'Нет доступных картриджей для расхода';
+                    } else {
+                        item.addEventListener('click', function() {
+                            const searchInput = type === 'arrival' ?
+                                document.getElementById('arrival_cartridge_search') :
+                                document.getElementById('consumption_cartridge_search');
+                            searchInput.value = cartridge.name;
+                            hiddenInput.value = cartridge.id;
+                            resultsContainer.style.display = 'none';
+
+                            // Для расхода устанавливаем максимальное значение
+                            if (type === 'consumption') {
+                                const quantityInput = document.getElementById('consumption_quantity');
+                                quantityInput.max = available;
+                                if (quantityInput.value > available) {
+                                    quantityInput.value = available;
+                                }
+                            }
+                        });
+                    }
+
+                    resultsContainer.appendChild(item);
+                });
+            }
+
+            resultsContainer.style.display = 'block';
+        }
+
+        // Функция для проверки, можно ли удалить картридж
+        function canDeleteCartridge(cartridge) {
+            return cartridge.used_quantity === 0;
+        }
+
+        // Функция для отображения данных в таблице
+        function displayCartridges(cartridgesToDisplay) {
+            const container = document.getElementById('cartridges-list');
+
+            if (cartridgesToDisplay.length === 0) {
+                container.innerHTML = '<p>Нет данных о картриджах</p>';
+                document.getElementById('loading').style.display = 'none';
+                return;
+            }
+
+            const html = `
+                <table class="cartridges-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Название картриджа</th>
+                            <th>Количество на складе</th>
+                            <th>Количество используемых</th>
+                            <th>Доступно</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${cartridgesToDisplay.map(cartridge => {
+                            const available = cartridge.stock_quantity - cartridge.used_quantity;
+                            const canDelete = canDeleteCartridge(cartridge);
+                            const isEditing = editingCartridgeId === cartridge.id;
+
+                            return `
+                            <tr data-id="${cartridge.id}">
+                                <td>${cartridge.id}</td>
+                                <td>
+                                    ${isEditing
+                                        ? `<div class="editable-cell">
+                                            <input type="text"
+                                                class="edit-input"
+                                                id="edit_input_${cartridge.id}"
+                                                value="${cartridge.name}">
+                                            <div class="edit-actions">
+                                                <button class="save-edit-btn" onclick="saveEditName(${cartridge.id})">
+                                                    Сохранить
+                                                </button>
+                                                <button class="cancel-edit-btn" onclick="cancelEdit(${cartridge.id})">
+                                                    Отмена
+                                                </button>
+                                            </div>
+                                        </div>`
+                                        : `<span id="name_${cartridge.id}">${cartridge.name}</span>`
+                                    }
+                                </td>
+                                <td>${cartridge.stock_quantity}</td>
+                                <td>${cartridge.used_quantity}</td>
+                                <td>${available}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="edit-btn"
+                                                onclick="startEditName(${cartridge.id})"
+                                                ${isEditing ? 'disabled' : ''}>
+                                            ✏️ Редактировать
+                                        </button>
+                                        <button class="delete-btn"
+                                                onclick="deleteRow(${cartridge.id})"
+                                                ${canDelete ? '' : 'disabled'}
+                                                title="${canDelete ? 'Удалить картридж' : 'Нельзя удалить: используется в ' + cartridge.used_quantity + ' принтерах'}">
+                                            🗑️ Удалить
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Функция для начала редактирования названия
+        function startEditName(cartridgeId) {
+            editingCartridgeId = cartridgeId;
+            displayCartridges(filteredCartridges);
+
+            // Фокус на поле ввода
+            setTimeout(() => {
+                const input = document.getElementById(`edit_input_${cartridgeId}`);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 100);
+        }
+
+        // Функция для сохранения отредактированного названия
+        async function saveEditName(cartridgeId) {
+            const newName = document.getElementById(`edit_input_${cartridgeId}`).value.trim();
+
+            if (!newName) {
+                alert('Название картриджа не может быть пустым!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${cartridgeId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({ name: newName })
+                });
+
+                if (response.ok) {
+                    // Обновляем данные в массиве
+                    const cartridgeIndex = cartridges.findIndex(c => c.id === cartridgeId);
+                    if (cartridgeIndex !== -1) {
+                        cartridges[cartridgeIndex].name = newName;
+                    }
+
+                    // Обновляем отфильтрованный массив
+                    const filteredIndex = filteredCartridges.findIndex(c => c.id === cartridgeId);
+                    if (filteredIndex !== -1) {
+                        filteredCartridges[filteredIndex].name = newName;
+                    }
+
+                    // Сбрасываем режим редактирования и обновляем таблицу
+                    editingCartridgeId = null;
+                    displayCartridges(filteredCartridges);
+                    alert('Название картриджа успешно обновлено!');
+                } else {
+                    throw new Error('Ошибка при обновлении названия');
+                }
+            } catch (error) {
+                alert('Ошибка при обновлении названия: ' + error.message);
+                cancelEdit(cartridgeId);
+            }
+        }
+
+        // Функция для отмены редактирования
+        function cancelEdit(cartridgeId) {
+            editingCartridgeId = null;
+            displayCartridges(filteredCartridges);
+        }
+
+        // Функция для удаления картриджа
+        async function deleteRow(cartridgeId) {
+            if (!confirm('Вы уверены, что хотите удалить этот картридж?')) {
+                return;
+            }
+
+            try {
+                // Проверяем количество использованных картриджей
+                const cartridgeResponse = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${cartridgeId}`);
+                const cartridgeData = await cartridgeResponse.json();
+
+                if (cartridgeData.length === 0) {
+                    alert('Картридж не найден!');
+                    return;
+                }
+
+                const cartridge = cartridgeData[0];
+
+                // Проверяем, что used_quantity равен 0
+                if (cartridge.used_quantity > 0) {
+                    alert(`Нельзя удалить картридж! Он все еще используется в ${cartridge.used_quantity} принтерах.`);
+                    return;
+                }
+
+                // Удаляем все операции, связанные с этим картриджем
+                try {
+                    await fetch(`http://10.174.130.148:8888/api/cartridge_operations?cartridge_id=eq.${cartridgeId}`, {
+                        method: 'DELETE',
+                        headers: { 'Prefer': 'return=minimal' }
+                    });
+                } catch (error) {
+                    console.warn('Ошибка при удалении операций картриджа:', error);
+                }
+
+                // Удаляем сам картридж
+                const response = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${cartridgeId}`, {
+                    method: 'DELETE',
+                    headers: { 'Prefer': 'return=representation' }
+                });
+
+                if (response.ok) {
+                    alert('Картридж успешно удален!');
+                    // Обновляем данные
+                    loadCartridges();
+                } else {
+                    throw new Error('Ошибка при удалении данных');
+                }
+            } catch (error) {
+                alert('Ошибка при удалении: ' + error.message);
+            }
+        }
+
+        // Обработчик отправки формы редактирования
+        document.getElementById('editCartridgeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const cartridgeId = formData.get('id');
+            const updatedData = {
+                name: formData.get('name'),
+                stock_quantity: parseInt(formData.get('stock_quantity')) || 0
+            };
+
+            try {
+                const response = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${cartridgeId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+
+                if (response.ok) {
+                    alert('Картридж успешно обновлен!');
+                    closeEditModal();
+                    loadCartridges();
+                } else {
+                    throw new Error('Ошибка при обновлении данных');
+                }
+            } catch (error) {
+                alert('Ошибка при обновлении: ' + error.message);
+            }
+        });
+
+        // Функция для добавления нового картриджа
+        async function addCartridge(cartridgeData) {
+            cartridgeData.used_quantity = 0;
+            const initialQuantity = cartridgeData.stock_quantity;
+
+            try {
+                const response = await fetch('http://10.174.130.148:8888/api/cartridges', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(cartridgeData)
+                });
+
+                if (response.ok) {
+                    const newCartridge = await response.json();
+
+                    // Записываем операцию начального количества
+                    if (initialQuantity > 0) {
+                        await logCartridgeOperation(
+                            newCartridge[0].id,
+                            'initial',
+                            initialQuantity,
+                            0,
+                            initialQuantity,
+                            'Начальное количество при создании картриджа'
+                        );
+                    }
+
+                    alert('Картридж успешно добавлен!');
+                    closeAddModal();
+                    document.getElementById('addCartridgeForm').reset();
+                    loadCartridges();
+                } else {
+                    throw new Error('Ошибка при добавлении данных');
+                }
+            } catch (error) {
+                alert('Ошибка при добавлении: ' + error.message);
+            }
+        }
+
+        // Функция для добавления прихода картриджей
+        async function addArrival(arrivalData) {
+            try {
+                const cartridgeResponse = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${arrivalData.cartridge_id}`);
+                const cartridgeData = await cartridgeResponse.json();
+
+                if (cartridgeData.length === 0) {
+                    alert('Ошибка: Картридж не найден!');
+                    return;
+                }
+
+                const currentCartridge = cartridgeData[0];
+                const previousStock = currentCartridge.stock_quantity;
+                const newStockQuantity = previousStock + arrivalData.arrival_quantity;
+
+                const response = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${arrivalData.cartridge_id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({ stock_quantity: newStockQuantity })
+                });
+
+                if (response.ok) {
+                    await logCartridgeOperation(
+                        arrivalData.cartridge_id,
+                        'arrival',
+                        arrivalData.arrival_quantity,
+                        previousStock,
+                        newStockQuantity,
+                        'Приход картриджей на склад'
+                    );
+
+                    alert(`Приход успешно добавлен! На склад добавлено ${arrivalData.arrival_quantity} картриджей.`);
+                    closeArrivalModal();
+                    document.getElementById('arrivalForm').reset();
+                    loadCartridges();
+                } else {
+                    throw new Error('Ошибка при добавлении прихода');
+                }
+            } catch (error) {
+                alert('Ошибка при добавлении прихода: ' + error.message);
+            }
+        }
+
+        // Функция для добавления расхода картриджей
+        async function addConsumption(consumptionData) {
+            try {
+                const cartridgeResponse = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${consumptionData.cartridge_id}`);
+                const cartridgeData = await cartridgeResponse.json();
+
+                if (cartridgeData.length === 0) {
+                    alert('Ошибка: Картридж не найден!');
+                    return;
+                }
+
+                const currentCartridge = cartridgeData[0];
+                const previousStock = currentCartridge.stock_quantity;
+                const available = previousStock - currentCartridge.used_quantity;
+
+                if (available < consumptionData.consumption_quantity) {
+                    alert(`Ошибка: Недостаточно картриджей для расхода! Доступно: ${available}, запрошено: ${consumptionData.consumption_quantity}`);
+                    return;
+                }
+
+                const newStockQuantity = previousStock - consumptionData.consumption_quantity;
+
+                const response = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${consumptionData.cartridge_id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({ stock_quantity: newStockQuantity })
+                });
+
+                if (response.ok) {
+                    await logCartridgeOperation(
+                        consumptionData.cartridge_id,
+                        'consumption',
+                        consumptionData.consumption_quantity,
+                        previousStock,
+                        newStockQuantity,
+                        'Расход картриджей со склада'
+                    );
+
+                    alert(`Расход успешно добавлен! Со склада списано ${consumptionData.consumption_quantity} картриджей.`);
+                    closeConsumptionModal();
+                    document.getElementById('consumptionForm').reset();
+                    loadCartridges();
+                } else {
+                    throw new Error('Ошибка при добавлении расхода');
+                }
+            } catch (error) {
+                alert('Ошибка при добавлении расхода: ' + error.message);
+            }
+        }
+
+        // Функция для записи операции с картриджем
+        async function logCartridgeOperation(cartridgeId, operationType, quantity, previousStock, newStock, note = '') {
+            try {
+                const operationData = {
+                    cartridge_id: cartridgeId,
+                    operation_type: operationType,
+                    quantity: quantity,
+                    previous_stock: previousStock,
+                    new_stock: newStock,
+                    user_note: note
+                };
+
+                const response = await fetch('http://10.174.130.148:8888/api/cartridge_operations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(operationData)
+                });
+
+                if (!response.ok) {
+                    console.error('Ошибка записи операции:', await response.text());
+                }
+            } catch (error) {
+                console.error('Ошибка записи операции:', error);
+            }
+        }
+
+        // Обработчики событий для модальных окон
+        document.getElementById('addCartridgeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const cartridgeData = {
+                name: formData.get('name'),
+                stock_quantity: parseInt(formData.get('stock_quantity')) || 0
+            };
+            addCartridge(cartridgeData);
+        });
+
+        document.getElementById('arrivalForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const arrivalData = {
+                cartridge_id: parseInt(document.getElementById('arrival_cartridge_id').value),
+                arrival_quantity: parseInt(formData.get('arrival_quantity')) || 1
+            };
+            if (!arrivalData.cartridge_id) {
+                alert('Пожалуйста, выберите картридж');
+                return;
+            }
+            addArrival(arrivalData);
+        });
+
+        document.getElementById('consumptionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const consumptionData = {
+                cartridge_id: parseInt(document.getElementById('consumption_cartridge_id').value),
+                consumption_quantity: parseInt(formData.get('consumption_quantity')) || 1
+            };
+            if (!consumptionData.cartridge_id) {
+                alert('Пожалуйста, выберите картридж');
+                return;
+            }
+            addConsumption(consumptionData);
+        });
+
+        // Обработчики поиска в модальных окнах
+        document.getElementById('arrival_cartridge_search').addEventListener('input', function(e) {
+            searchCartridges(e.target.value, document.getElementById('arrival_cartridge_results'), document.getElementById('arrival_cartridge_id'), 'arrival');
+        });
+
+        document.getElementById('consumption_cartridge_search').addEventListener('input', function(e) {
+            searchCartridges(e.target.value, document.getElementById('consumption_cartridge_results'), document.getElementById('consumption_cartridge_id'), 'consumption');
+        });
+
+        // Закрытие результатов поиска при клике вне
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                document.getElementById('arrival_cartridge_results').style.display = 'none';
+                document.getElementById('consumption_cartridge_results').style.display = 'none';
+            }
+        });
+
+        // Закрытие модальных окон при клике вне их
+        window.addEventListener('click', function(e) {
+            if (e.target === document.getElementById('addModal')) closeAddModal();
+            if (e.target === document.getElementById('arrivalModal')) closeArrivalModal();
+            if (e.target === document.getElementById('consumptionModal')) closeConsumptionModal();
+            if (e.target === document.getElementById('editModal')) closeEditModal();
+        });
+
+        // Закрытие модальных окон по Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAddModal();
+                closeArrivalModal();
+                closeConsumptionModal();
+                closeEditModal();
+            }
+        });
+
+        // Загружаем данные при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCartridges();
+        });
+
+    function sortByID() {
+        const sortBtn = document.getElementById('sortIDBtn');
+        const sortIcon = sortBtn.querySelector('.sort-icon');
+
+        if (!isSortedByID) {
+            // Первая сортировка - по возрастанию
+            sortAscending = true;
+            isSortedByID = true;
+            sortBtn.classList.add('active');
+            sortIcon.textContent = '🔼';
+        } else {
+            // Переключение направления
+            sortAscending = !sortAscending;
+            sortIcon.textContent = sortAscending ? '🔼' : '🔽';
+        }
+
+        // Сортировка массива
+        filteredCartridges.sort((a, b) => {
+            if (sortAscending) {
+                return a.id - b.id;
+            } else {
+                return b.id - a.id;
+            }
+        });
+
+        // Обновление отображения
+        displayCartridges(filteredCartridges);
+
+        // Обновление текста кнопки
+        const directionText = sortAscending ? ' (по возрастанию)' : ' (по убыванию)';
+        sortBtn.innerHTML = `<span class="sort-icon">${sortAscending ? '🔼' : '🔽'}</span> Упорядочить по ID${directionText}`;
+    }
+
+    // Обновите функцию filterCartridges, чтобы сбросить сортировку при поиске
+    function filterCartridges() {
+        const searchTerm = document.getElementById('globalSearch').value.toLowerCase();
+
+        // Сбрасываем сортировку по ID при новом поиске
+        isSortedByID = false;
+        const sortBtn = document.getElementById('sortIDBtn');
+        if (sortBtn) {
+            sortBtn.classList.remove('active');
+            sortBtn.innerHTML = `<span class="sort-icon">🔽</span> Упорядочить по ID`;
+        }
+
+        if (searchTerm.trim() === '') {
+            filteredCartridges = [...cartridges];
+        } else {
+            filteredCartridges = cartridges.filter(cartridge =>
+                cartridge.name.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        displayCartridges(filteredCartridges);
+        updateSearchCount(filteredCartridges.length);
+    }
+
+    // Обновите функцию loadCartridges, чтобы при загрузке данных тоже сбрасывалась сортировка
+    async function loadCartridges() {
+        try {
+            const response = await fetch('http://10.174.130.148:8888/api/cartridges');
+            const data = await response.json();
+            cartridges = data;
+            filteredCartridges = [...data];
+
+            // Сбрасываем сортировку при загрузке
+            isSortedByID = false;
+            const sortBtn = document.getElementById('sortIDBtn');
+            if (sortBtn) {
+                sortBtn.classList.remove('active');
+                sortBtn.innerHTML = `<span class="sort-icon">🔽</span> Упорядочить по ID`;
+            }
+
+            displayCartridges(data);
+            updateSearchCount(data.length);
+        } catch (error) {
+            document.getElementById('cartridges-list').innerHTML =
+                '<p style="color: red;">Ошибка загрузки данных: ' + error.message + '</p>';
+        }
+    }
+    </script>
+</body>
+</html>

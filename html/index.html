@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Учет принтеров</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Сайдбар */
+        .sidebar {
+            width: 60px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+            z-index: 1000;
+        }
+
+        .sidebar:hover {
+            width: 250px;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 0 20px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s ease 0.1s;
+        }
+
+        .sidebar:hover h2 {
+            opacity: 1;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: #34495e;
+            border-left-color: #3498db;
+        }
+
+        .nav-item.active {
+            background: #34495e;
+            border-left-color: #3498db;
+        }
+
+        .nav-item a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-text {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar:hover .nav-text {
+            opacity: 1;
+        }
+
+        /* Основной контент */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Контейнер контента */
+        .content-container {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* Кнопка добавления */
+        .add-printer-btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-printer-btn:hover {
+            background: #1976D2;
+        }
+
+        /* Стили для таблицы */
+        .printers-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .printers-table th,
+        .printers-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .printers-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .printers-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-active {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #2e7d32;
+        }
+
+        .status-inactive {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #c62828;
+        }
+
+        .status-badge:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .delete-btn:hover {
+            background: #da190b;
+        }
+
+        /* Модальное окно для добавления - компактная версия */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #2196F3;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+
+        /* Стили для поиска картриджей */
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .search-result-item:hover {
+            background: #f5f5f5;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .cartridge-info {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .cartridge-available {
+            color: #4CAF50;
+        }
+
+        .cartridge-unavailable {
+            color: #f44336;
+        }
+
+        .submit-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .submit-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: #45a049;
+        }
+
+        /* Адаптивность для модального окна */
+        @media (max-width: 768px) {
+            .modal-content {
+                margin: 5% auto;
+                padding: 15px;
+                width: 95%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .modal-content {
+                margin: 2% auto;
+                padding: 12px;
+            }
+
+            .modal-title {
+                font-size: 1.1rem;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 6px 8px;
+                font-size: 13px;
+            }
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem;
+            color: #666;
+            background: white;
+            border-top: 1px solid #ddd;
+        }
+
+        /* Индикатор для пользователя */
+        .sidebar::after {
+            content: '☰';
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            color: white;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar:hover::after {
+            opacity: 0;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: 60px;
+                padding: 0;
+            }
+
+            .sidebar:hover {
+                width: 100%;
+                height: auto;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .sidebar:hover .nav-menu {
+                display: block;
+            }
+
+            .sidebar h2 {
+                display: none;
+            }
+
+            .sidebar:hover h2 {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Сайдбар с навигацией -->
+    <div class="sidebar">
+        <h2>📊 Учет</h2>
+        <ul class="nav-menu">
+            <li class="nav-item active">
+                <a href="index.html">
+                    <span>🖨️</span>
+                    <span class="nav-text">Принтеры</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="cartridges.html">
+                    <span>🖋️</span>
+                    <span class="nav-text">Картриджи</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="reports.html">
+                    <span>📈</span>
+                    <span class="nav-text">Отчетность</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="main-content">
+        <!-- Контент с таблицей -->
+        <div class="content-container">
+            <h2>Все принтеры</h2>
+            <button class="add-printer-btn" onclick="openAddModal()">
+                <span>➕</span> Добавить принтер
+            </button>
+            <div id="loading">Загрузка данных...</div>
+            <div id="printers-list"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно добавления - компактная версия -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Добавить новый принтер</div>
+                <button class="close-btn" onclick="closeAddModal()">&times;</button>
+            </div>
+            <form id="addPrinterForm">
+                <div class="form-group">
+                    <label for="cabinet">Кабинет:</label>
+                    <input type="text" id="cabinet" name="cabinet" required placeholder="Например: 101">
+                </div>
+
+                <div class="form-group">
+                    <label for="printer_model">Модель принтера:</label>
+                    <input type="text" id="printer_model" name="printer_model" required placeholder="Например: HP LaserJet Pro M404dn">
+                </div>
+
+                <div class="form-group">
+                    <label for="serial_number">Серийный номер:</label>
+                    <input type="text" id="serial_number" name="serial_number" required placeholder="Например: CN12345678">
+                </div>
+
+                <div class="form-group">
+                    <label for="cartridge_search">Поиск картриджа:</label>
+                    <div class="search-container">
+                        <input type="text" id="cartridge_search" class="search-input" placeholder="Начните вводить название картриджа...">
+                        <div id="cartridge_results" class="search-results"></div>
+                        <input type="hidden" id="cartridge_id" name="cartridge_id" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="institute_id">Институт:</label>
+                    <select id="institute_id" name="institute_id" required>
+                        <option value="">Выберите институт</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">Добавить принтер</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let cartridges = [];
+        let institutes = [];
+        let existingSerialNumbers = new Set();
+
+        // Функция для загрузки данных принтеров
+        async function loadPrinters() {
+            try {
+                const response = await fetch('http://10.174.130.148:8888/api/printers?select=*,cartridges(name,stock_quantity,used_quantity),institutes(name)');
+                const data = await response.json();
+                displayPrinters(data);
+                // Сохраняем существующие серийные номера для проверки дубликатов
+                existingSerialNumbers = new Set(data.map(printer => printer.serial_number));
+            } catch (error) {
+                document.getElementById('printers-list').innerHTML =
+                    '<p style="color: red;">Ошибка загрузки данных: ' + error.message + '</p>';
+            }
+        }
+
+        // Функция для загрузки картриджей
+        async function loadCartridges() {
+            try {
+                const response = await fetch('http://10.174.130.148:8888/api/cartridges');
+                cartridges = await response.json();
+            } catch (error) {
+                console.error('Ошибка загрузки картриджей:', error);
+            }
+        }
+
+        // Функция для загрузки институтов
+        async function loadInstitutes() {
+            try {
+                const response = await fetch('http://10.174.130.148:8888/api/institutes');
+                institutes = await response.json();
+                populateInstituteSelect();
+            } catch (error) {
+                console.error('Ошибка загрузки институтов:', error);
+            }
+        }
+
+        // Заполнение выпадающего списка институтов
+        function populateInstituteSelect() {
+            const select = document.getElementById('institute_id');
+            select.innerHTML = '<option value="">Выберите институт</option>';
+            institutes.forEach(institute => {
+                const option = document.createElement('option');
+                option.value = institute.id;
+                option.textContent = institute.name;
+                select.appendChild(option);
+            });
+        }
+
+        // Функция для поиска картриджей
+        function searchCartridges(searchTerm) {
+            const resultsContainer = document.getElementById('cartridge_results');
+            resultsContainer.innerHTML = '';
+
+            if (searchTerm.length < 2) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+
+            const filteredCartridges = cartridges.filter(cartridge =>
+                cartridge.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            if (filteredCartridges.length === 0) {
+                resultsContainer.innerHTML = '<div class="search-result-item">Ничего не найдено</div>';
+            } else {
+                filteredCartridges.forEach(cartridge => {
+                    const available = cartridge.stock_quantity - cartridge.used_quantity;
+                    const isAvailable = available > 0;
+
+                    const item = document.createElement('div');
+                    item.className = 'search-result-item';
+                    item.innerHTML = `
+                        <div>${cartridge.name}</div>
+                        <div class="cartridge-info ${isAvailable ? 'cartridge-available' : 'cartridge-unavailable'}">
+                            Доступно: ${available} из ${cartridge.stock_quantity}
+                        </div>
+                    `;
+                    item.dataset.id = cartridge.id;
+                    item.dataset.available = isAvailable;
+
+                    if (isAvailable) {
+                        item.addEventListener('click', function() {
+                            document.getElementById('cartridge_search').value = cartridge.name;
+                            document.getElementById('cartridge_id').value = cartridge.id;
+                            resultsContainer.style.display = 'none';
+                            updateSubmitButton();
+                        });
+                    } else {
+                        item.style.opacity = '0.6';
+                        item.style.cursor = 'not-allowed';
+                    }
+
+                    resultsContainer.appendChild(item);
+                });
+            }
+
+            resultsContainer.style.display = 'block';
+        }
+
+        // Функция для обновления состояния кнопки отправки
+        function updateSubmitButton() {
+            const cartridgeId = document.getElementById('cartridge_id').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (cartridgeId) {
+                const selectedCartridge = cartridges.find(c => c.id == cartridgeId);
+                if (selectedCartridge) {
+                    const available = selectedCartridge.stock_quantity - selectedCartridge.used_quantity;
+                    if (available > 0) {
+                        submitBtn.disabled = false;
+                        submitBtn.title = '';
+                    } else {
+                        submitBtn.disabled = true;
+                        submitBtn.title = 'Выбранный картридж недоступен (нет свободных на складе)';
+                    }
+                }
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.title = 'Выберите картридж';
+            }
+        }
+
+        // Функция для отображения данных в таблице
+        function displayPrinters(printers) {
+            const container = document.getElementById('printers-list');
+
+            if (printers.length === 0) {
+                container.innerHTML = '<p>Нет данных о принтерах</p>';
+                return;
+            }
+
+            const html = `
+                <table class="printers-table">
+                    <thead>
+                        <tr>
+                            <th>Кабинет</th>
+                            <th>Модель принтера</th>
+                            <th>S/N</th>
+                            <th>Картридж</th>
+                            <th>Институт</th>
+                            <th>Статус</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${printers.map(printer => `
+                            <tr data-id="${printer.id}">
+                                <td>${printer.cabinet}</td>
+                                <td>${printer.printer_model}</td>
+                                <td>${printer.serial_number}</td>
+                                <td>${printer.cartridges.name}</td>
+                                <td>${printer.institutes.name}</td>
+                                <td>
+                                    <span class="status-badge ${printer.status === 'active' ? 'status-active' : 'status-inactive'}"
+                                          onclick="toggleStatus(${printer.id}, '${printer.status}', ${printer.cartridge_id})">
+                                        ${printer.status === 'active' ? 'Активен' : 'Неактивен'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="delete-btn" onclick="deleteRow(${printer.id}, ${printer.cartridge_id}, '${printer.status}')">Удалить</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = html;
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Функция для обновления количества картриджей
+        async function updateCartridgeQuantity(cartridgeId, stockChange = 0, usedChange = 0) {
+            try {
+                // Сначала получаем текущие данные картриджа
+                const response = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${cartridgeId}`);
+                const cartridgeData = await response.json();
+
+                if (cartridgeData.length === 0) {
+                    throw new Error('Картридж не найден');
+                }
+
+                const currentCartridge = cartridgeData[0];
+                const newStockQuantity = Math.max(0, currentCartridge.stock_quantity + stockChange);
+                const newUsedQuantity = Math.max(0, currentCartridge.used_quantity + usedChange);
+
+                // Проверяем, что used_quantity не превышает stock_quantity
+                if (newUsedQuantity > newStockQuantity) {
+                    throw new Error('Количество используемых не может превышать количество на складе');
+                }
+
+                // Обновляем картридж
+                const updateResponse = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${cartridgeId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        stock_quantity: newStockQuantity,
+                        used_quantity: newUsedQuantity
+                    })
+                });
+
+                if (!updateResponse.ok) {
+                    throw new Error('Ошибка при обновлении количества картриджей');
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Ошибка при обновлении количества картриджей:', error);
+                throw error;
+            }
+        }
+
+        // Функция для переключения статуса принтера
+async function toggleStatus(printerId, currentStatus, cartridgeId) {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    const statusText = newStatus === 'active' ? 'активен' : 'неактивен';
+
+    if (!confirm(`Вы уверены, что хотите изменить статус принтера на "${statusText}"?`)) {
+        return;
+    }
+
+    try {
+        // Получаем данные картриджа
+        const cartridgeResponse = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${cartridgeId}`);
+        const cartridgeData = await cartridgeResponse.json();
+
+        if (cartridgeData.length === 0) {
+            throw new Error('Картридж не найден');
+        }
+
+        const cartridge = cartridgeData[0];
+        const previousStock = cartridge.stock_quantity;
+        const previousUsed = cartridge.used_quantity;
+
+        // Если переключаем с активного на неактивный - освобождаем картридж
+        if (currentStatus === 'active' && newStatus === 'inactive') {
+            await updateCartridgeQuantity(cartridgeId, 0, -1);
+
+            // Записываем операцию освобождения картриджа
+            await logCartridgeOperation(
+                cartridgeId,
+                'release',
+                1,
+                previousStock,
+                previousStock, // stock не меняется
+                `Освобождение картриджа (принтер переведен в неактивный)`
+            );
+        }
+        // Если переключаем с неактивного на активный - используем картридж
+        else if (currentStatus === 'inactive' && newStatus === 'active') {
+            const available = cartridge.stock_quantity - cartridge.used_quantity;
+
+            if (available <= 0) {
+                alert('Нельзя активировать принтер: нет свободных картриджей этого типа на складе!');
+                return;
+            }
+
+            await updateCartridgeQuantity(cartridgeId, 0, 1);
+
+            // Записываем операцию использования картриджа
+            await logCartridgeOperation(
+                cartridgeId,
+                'usage',
+                1,
+                previousStock,
+                previousStock, // stock не меняется
+                `Использование картриджа (принтер активирован)`
+            );
+        }
+
+        // Обновляем статус принтера
+        const response = await fetch(`http://10.174.130.148:8888/api/printers?id=eq.${printerId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (response.ok) {
+            alert(`Статус принтера успешно изменен на "${statusText}"!`);
+            loadPrinters();
+            loadCartridges();
+        } else {
+            throw new Error('Ошибка при изменении статуса');
+        }
+    } catch (error) {
+        alert('Ошибка при изменении статуса: ' + error.message);
+        loadPrinters();
+        loadCartridges();
+    }
+}
+
+// Добавьте функцию logCartridgeOperation в index.html
+async function logCartridgeOperation(cartridgeId, operationType, quantity, previousStock, newStock, note = '') {
+    try {
+        const operationData = {
+            cartridge_id: cartridgeId,
+            operation_type: operationType,
+            quantity: quantity,
+            previous_stock: previousStock,
+            new_stock: newStock,
+            user_note: note
+        };
+
+        const response = await fetch('http://10.174.130.148:8888/api/cartridge_operations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            },
+            body: JSON.stringify(operationData)
+        });
+
+        if (!response.ok) {
+            console.error('Ошибка записи операции:', await response.text());
+        }
+    } catch (error) {
+        console.error('Ошибка записи операции:', error);
+    }
+}
+        // Функция для удаления строки
+        async function deleteRow(printerId, cartridgeId, status) {
+            if (!confirm('Вы уверены, что хотите удалить этот принтер?')) {
+                return;
+            }
+
+            try {
+                // Если принтер активен, освобождаем картридж при удалении
+                if (status === 'active') {
+                    await updateCartridgeQuantity(cartridgeId, 0, -1);
+                }
+
+                const response = await fetch(`http://10.174.130.148:8888/api/printers?id=eq.${printerId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Prefer': 'return=representation'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Принтер успешно удален!');
+                    // Обновляем таблицу
+                    loadPrinters();
+                    // Обновляем список картриджей
+                    loadCartridges();
+                } else {
+                    throw new Error('Ошибка при удалении данных');
+                }
+            } catch (error) {
+                alert('Ошибка при удалении: ' + error.message);
+                // В случае ошибки перезагружаем данные для синхронизации
+                loadPrinters();
+                loadCartridges();
+            }
+        }
+
+        // Функция для проверки существующего серийного номера
+        async function checkSerialNumberExists(serialNumber) {
+            try {
+                const response = await fetch(`http://10.174.130.148:8888/api/printers?serial_number=eq.${encodeURIComponent(serialNumber)}`);
+                const data = await response.json();
+                return data.length > 0;
+            } catch (error) {
+                console.error('Ошибка при проверке серийного номера:', error);
+                return false;
+            }
+        }
+
+        // Функция для добавления нового принтера
+        async function addPrinter(printerData) {
+            try {
+                // Проверяем существование серийного номера
+                const serialExists = await checkSerialNumberExists(printerData.serial_number);
+                if (serialExists) {
+                    alert('Ошибка: Принтер с таким серийным номером уже существует!');
+                    return;
+                }
+
+                // Проверяем доступность картриджа
+                const cartridgeResponse = await fetch(`http://10.174.130.148:8888/api/cartridges?id=eq.${printerData.cartridge_id}`);
+                const cartridgeData = await cartridgeResponse.json();
+
+                if (cartridgeData.length === 0) {
+                    alert('Ошибка: Выбранный картридж не найден!');
+                    return;
+                }
+
+                const cartridge = cartridgeData[0];
+                const available = cartridge.stock_quantity - cartridge.used_quantity;
+
+                if (available <= 0) {
+                    alert('Ошибка: Нет свободных картриджей выбранного типа на складе!');
+                    return;
+                }
+
+                // Обновляем количество картриджей (уменьшаем количество доступных)
+                await updateCartridgeQuantity(printerData.cartridge_id, 0, 1);
+
+                // Добавляем принтер
+                const response = await fetch('http://10.174.130.148:8888/api/printers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(printerData)
+                });
+
+                if (response.ok) {
+                    alert('Принтер успешно добавлен!');
+                    closeAddModal();
+                    // Очищаем форму
+                    document.getElementById('addPrinterForm').reset();
+                    // Обновляем таблицу
+                    loadPrinters();
+                    // Обновляем список картриджей
+                    loadCartridges();
+                } else {
+                    // Если добавление принтера не удалось, откатываем изменения в количестве картриджей
+                    await updateCartridgeQuantity(printerData.cartridge_id, 0, -1);
+                    throw new Error('Ошибка при добавлении данных');
+                }
+            } catch (error) {
+                alert('Ошибка при добавлении: ' + error.message);
+            }
+        }
+
+        // Функции для модального окна
+        function openAddModal() {
+            document.getElementById('addModal').style.display = 'block';
+            // Сбрасываем поиск картриджей
+            document.getElementById('cartridge_search').value = '';
+            document.getElementById('cartridge_id').value = '';
+            document.getElementById('cartridge_results').style.display = 'none';
+            updateSubmitButton();
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+        }
+
+        // Обработчик отправки формы
+        document.getElementById('addPrinterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const cartridgeId = document.getElementById('cartridge_id').value;
+            const serialNumber = document.getElementById('serial_number').value;
+
+            if (!cartridgeId) {
+                alert('Пожалуйста, выберите картридж из списка');
+                return;
+            }
+
+            // Проверка на клиенте (дополнительная)
+            if (existingSerialNumbers.has(serialNumber)) {
+                alert('Ошибка: Принтер с таким серийным номером уже существует!');
+                return;
+            }
+
+            const printerData = {
+                cabinet: formData.get('cabinet'),
+                printer_model: formData.get('printer_model'),
+                serial_number: serialNumber,
+                cartridge_id: parseInt(cartridgeId),
+                institute_id: parseInt(formData.get('institute_id')),
+                status: 'active'
+            };
+
+            addPrinter(printerData);
+        });
+
+        // Обработчик поиска картриджей
+        document.getElementById('cartridge_search').addEventListener('input', function(e) {
+            searchCartridges(e.target.value);
+        });
+
+        // Закрытие результатов поиска при клике вне
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                document.getElementById('cartridge_results').style.display = 'none';
+            }
+        });
+
+        // Закрытие модального окна при клике вне его
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('addModal');
+            if (e.target === modal) {
+                closeAddModal();
+            }
+        });
+
+        // Закрытие модального окна по Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAddModal();
+            }
+        });
+
+        // Загружаем данные при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPrinters();
+            loadCartridges();
+            loadInstitutes();
+        });
+
+    </script>
+</body>
+</html>
